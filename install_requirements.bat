@@ -1,1 +1,1 @@
-python -m pip install -r requirements.txt
+Scripts\python.exe -m pip install -r requirements.txt

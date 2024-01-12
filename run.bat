@@ -1,1 +1,1 @@
-python interface_v1.py
+Scripts\python.exe interface_v1.py
