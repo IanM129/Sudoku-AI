@@ -11,22 +11,55 @@ from utility import floatGridToIntGrid, findInvalidCells, gridToIndeces, getExcl
 # => ((button, button, label), (inputGrid, solGrid, invalid list) = 'test', name)
 testLogs = [];
 openTemp = [];
+valPzlCnt = 0;
+valCellCnt = 0;
+count = 0;
 
 missing = 44;
 
 def showStartInfo(val):
+    global openInfoLbl;
     if (val == True):
         openInfoLbl.config(state=tk.NORMAL);
         openInfoLbl.grid(columnspan=2);
     else:
         openInfoLbl.config(state=tk.DISABLED);
         openInfoLbl.grid_forget();
+def showProgLbl(val):
+    global progLbl;
+    if (val == True):
+        progLbl.grid(row=(len(testLogs) + 2), column=1, columnspan=2);
+    else:
+        progLbl.grid_forget();
+def showStats(val):
+    global statsLbl;
+    if (val == True):
+        statsLbl.config(state=tk.NORMAL);
+        statsLbl.grid(row=len(testLogs) + 1, column=1, columnspan=3);
+    else:
+        statsLbl.config(state=tk.DISABLED);
+        statsLbl.grid_forget();
+def updateStats():
+    global valPzlCnt; global valCellCnt; global count;
+    statsLbl.config(text=("- " * 14) + " overall accuracy " + (" -" * 14) + "\n" +
+                    ("{}  {:6.2f}% {:52s}".format("puzzles", ((valPzlCnt / len(testLogs)) * 100),
+                     str("(" + str(valPzlCnt) + "/" + str(len(testLogs)) + ")"))) + "\n" +
+                    ("{}  {:6.2f}% {:52s}".format("cells  ", ((valCellCnt / count) * 100),
+                     str("(" + str(valCellCnt) + "/" + str(count) + ")"))));
 def refresh():
     global testLogs;
-    # hide/show info label
+    # hide/show info and stats label
     global openInfoLbl;
-    if (len(testLogs) > 0 and openInfoLbl["state"] == tk.NORMAL): showStartInfo(False);
-    elif (len(testLogs) == 0 and openInfoLbl["state"] == tk.DISABLED): showStartInfo(True);
+    global statsLbl;
+    if (len(testLogs) > 0):
+        if (openInfoLbl["state"] == tk.NORMAL): showStartInfo(False);
+        #if (statsLbl["state"] == tk.DISABLED): showStats(True);
+    elif (len(testLogs) == 0):
+        if (openInfoLbl["state"] == tk.DISABLED): showStartInfo(True);
+        if (statsLbl["state"] == tk.NORMAL): showStats(False);
+    # stats update
+    if (count > 0):
+        updateStats();
     # win update
     global mainCnv;
     mainCnv.configure(scrollregion=mainCnv.bbox("all"));
@@ -54,6 +87,10 @@ def clearLog():
         for j in range(3):
             testLogs[i][0][j].destroy();
     testLogs = [];
+    global valPzlCnt; global valCellCnt; global count;
+    valPzlCnt = 0;
+    valCellCnt = 0;
+    count = 0;
     refresh();
     return;
 
@@ -64,9 +101,6 @@ def addTest(test, testName, doRefresh = True):
     # create tkinter element
     winWid = win.winfo_width();
     row = len(testLogs) + 1;
-    #frame = tk.Frame(win);
-    #frame.config(width=winWid)
-    #frame.grid(padx=10, pady=10);
     # test button
     global pixelPic;
     tbtn = tk.Button(frame, image=pixelPic, command=partial(openTest, row - 1));
@@ -95,12 +129,18 @@ def addTest(test, testName, doRefresh = True):
     tLbl = tk.Label(lblFrm, font=testInfoFont,
                     text=(str(missing - len(test[2])) + " / " + str(missing)));
     tLbl.grid(row=1,column=2);
+    # add to count
+    global valPzlCnt;  global valCellCnt; global count;
+    if (len(test[2]) == 0): valPzlCnt += 1;
+    valCellCnt += missing - len(test[2]);
+    count += missing;
     # add to log
     testLogs.append(((tbtn, rbtn, lblFrm), test, testName));
     if (doRefresh): refresh();
     return;
 
 def runTest(model = None):
+    showStats(False);
     # generate test
     (inputGrid, solGrid, removedCells) = generateFullSample(missing);
     (inputTensor, solTensor) = prepareSample(inputGrid, solGrid);
@@ -115,20 +155,22 @@ def runTest(model = None):
 def runTests(count):
     # progress label
     showStartInfo(False);
-    global frame;
-    progLbl = tk.Label(frame, text="...", font=("Helvetica", 12, "bold"));
-    curRow = len(testLogs) + 1;
-    progLbl.grid(row=curRow, column=1, columnspan=2);
+    showStats(False);
+    showProgLbl(True);
+    #curRow = len(testLogs) + 1;
+    #progLbl.grid(row=curRow, column=1, columnspan=2);
     win.update();
     # run tests
     for i in range(count):
         win.title("Sudoku AI evaluation (*working* " + str(i + 1) + "/" + str(count) + ")");
         test = runTest();
-        curRow += 1;
-        progLbl.grid(row=curRow, column=1, columnspan=2);
+        #curRow += 1;
+        showProgLbl(True); #progLbl.grid(row=curRow, column=1, columnspan=2);
         addTest(test, "");
     win.title("Sudoku AI evaluation");
-    progLbl.destroy();
+    showProgLbl(False); #progLbl.destroy();
+    #updateStats();
+    showStats(True);
     return;
 def runTestsCustom():
     win.withdraw();
@@ -140,10 +182,16 @@ def runTestsCustom():
 
 ## Special
 def runTestBlankModel():
+    showStats(False);
+    showProgLbl(True);
+    win.update();
     model = createModel();
     test = runTest(model);
     addTest(test, "(Blank)");
-
+    showProgLbl(False);
+    showStats(True);
+    refresh();
+    
 def newWindow():
     global win;
     win = tk.Tk();
@@ -189,6 +237,14 @@ def newWindow():
     global openInfoLbl;
     openInfoLbl = tk.Label(frame, text="Run a test from the toolbar to start.", font=infoFont);
     openInfoLbl.grid(row=1,column=1,columnspan=2);
+    # prog label
+    global progLbl;
+    progLbl = tk.Label(frame, text="...", font=("Helvetica", 12, "bold"));
+    # stats
+    global statsLbl;
+    statsLbl = tk.Label(frame, font=("Lucida Sans Typewriter", 12, "bold"),
+                        text=("- " * 80) + "\noverall accuracy: 0%");
+    #statsLbl.grid(row=1,column=1,columnspan=2);
     # constants
     global pixelPic;
     pixelPic = tk.PhotoImage(width=1, height=1);
@@ -197,3 +253,4 @@ def newWindow():
 
 if __name__ == "__main__":
     newWindow();
+    win.mainloop();
