@@ -1,11 +1,13 @@
 from math import floor
-import tkinter as tk
-from tkinter import font as tkFont
-from functools import partial
 import random as rand
-import time
+from time import time as time_time
+from datetime import datetime
+from debug import sprintGrid1D, sprintGrid2D
 
-## {cell item/element, value in cell (INT)}
+rand.seed(int(datetime.now().timestamp()));
+
+####### Structures  #######
+## {cell item/element, value in cell (int)}
 class SudokuGrid:
     grid = [None] * 81;
     def getElement(self, x, y):
@@ -14,37 +16,10 @@ class SudokuGrid:
         return self.grid[9*y + x][1];
     def setVal(self, x, y, val):
         self.grid[9*y + x][1] = val;
-
-## UTILITY
-def sprintGrid(target):
-    r = "";
-    for y in range(9):
-        r += "[";
-        first = True;
-        for x in range(9):
-            if (not first): r += ", ";
-            else: first = False;
-            if (target[9*y + x] == None): r += "/";
-            else: r += str(target[9*y + x]);
-        r += "]";
-        if (y != 8): r += "\n";
-    return r;
-def sprintGrid2D(target):
-    r = "";
-    for y in range(9):
-        r += "[";
-        first = True;
-        for x in range(9):
-            if (not first): r += ", ";
-            else: first = False;
-            if (target[y][x] == None): r += "/";
-            else: r += str(target[y][x]);
-        r += "]";
-        if (y != 8): r += "\n";
-    return r;
+#######
 
 
-#### FUNCTIONS
+#######  Utility functions  #######
 ## Check validity
 # (x, y) = [0, 2]
 def subGridValid(x, y, grid, retCnt = False):
@@ -86,7 +61,7 @@ def columnValid(x, grid, retCnt = False):
         nums[val - 1] = True;
     if (retCnt): return count;
     return True;
-def isSudokuValid(grid, retCnt = False):
+def isSudokuValid(grid : list[list[int]], retCnt : bool = False) -> bool:
     count = 0;
     # check all subgrids
     for y in range(3):
@@ -113,24 +88,11 @@ def isSudokuValid(grid, retCnt = False):
     if (retCnt): return (81 - count);
     return True;
 ## Create grid and puzzle
-def getEmptyGrid():
+def emptyGrid():
     grid = [];
     for i in range(9):
         grid.append([None] * 9);
     return grid;
-def generateSubGrid(parent, x=3, y=3):
-    frame = tk.Frame(parent);
-    photos = [];
-    start = 1;
-    for i in range(y):
-        for j in range(x):
-            pi = tk.PhotoImage(width=1,height=1);
-            photos.append(pi);
-            btn = tk.Button(frame,text=start,image=pi,compound="c",width=cellSize,height=cellSize);
-            btn.grid(row=i,column=j,sticky=tk.W,padx=1,pady=1);
-            btn["font"] = helv36;
-            start += 1;
-    return photos, frame;
 def getValidNums(x, y, grid):
     # bool list
     valid = [];
@@ -167,9 +129,9 @@ def getValidNums(x, y, grid):
             debug.append(i);
     #print(" X -> ", debug);
     return result;
-
-
 #######
+
+#######  Generate random grid  #######
 def getFirstEmpty(grid):
     for x in range(0,9):
         for y in range(0,9):
@@ -182,8 +144,8 @@ def checkGrid(grid):
             if grid[y][x] == None:
                 return False
     return True
-##
-def generateRest(grid):
+## Main
+def generateRest(grid : list[list[int]]) -> list[list[int]]:
     if checkGrid(grid):
         return grid;
     for y in range(9):
@@ -197,8 +159,8 @@ def generateRest(grid):
                             return generateRest(grid);
                         grid[y][x] = None;
     return False;
-def generateRandomGrid():
-    grid = getEmptyGrid();
+def generateRandomGrid() -> list[list[int]]:
+    grid = emptyGrid();
     nums = list(range(1, 10));
     for y in range(3):
         for x in range(3):
@@ -219,8 +181,9 @@ def generateRandomGrid():
             nums.remove(n);
     #gridToSystem(grid);
     return generateRest(grid);
+#######
 
-## Grid solving algorithm
+#######  Grid solving algorithm(s)  #######
 def solveGridCount(grid):
     solutions = 0;
     maxSolsFound = 0;
@@ -248,11 +211,16 @@ def solveGridCount(grid):
             maxSolsFound = solutions;
         solutions = 0;
     return maxSolsFound;
-def solveGrid(grid):
+def solveGrid(grid, start = False):
+    if start == True:
+        start_timer = time_time();
     # get first empty
     empty = getFirstEmpty(grid);
     # check if grid filled
     if (not empty):
+        if (start):
+            print("not empty??");
+            print(grid);
         return True;
     # iterate through possible values to put in empty
     x = empty[0];
@@ -263,52 +231,62 @@ def solveGrid(grid):
         for val in vals:
             grid[y][x] = val;
             if (solveGrid(grid)):
+                if (start == True):
+                    print("done; duration: " + str(time_time() - start_timer));
                 return True;
             grid[y][x] = None;
     return False;
+#######
 
-## Main puzzle generation
-def generatePuzzle(grid, missingClues):
-    attempts = 1;
+#######  Generate puzzle  #######
+# solGrid must be 2D [9][9] grid
+def generatePuzzle(solGrid : list[list[int]], missingClues : int) -> tuple[list[list[int]], list[int]]:
+    pzlGrid = [];
+    # copy solGrid to not modify it
+    for i in range(9):
+            pzlGrid.append([]);
+            for j in range(9):
+                pzlGrid[i].append(solGrid[i][j]);
+    #attempts = 1;
     cells = list(range(0, 80));
     rand.shuffle(cells);
     removedCells = [None] * 81;
     for n in range(missingClues):
         if (len(cells) == 0):
-            print("IMPOSSIBLE COMBO"); return grid;
+            print("IMPOSSIBLE COMBO"); return None;
         val = cells.pop();
         # select a random cell that is not already empty
         x = val % 9;
         y = floor(val / 9);
-        if (grid[y][x] == None):
-            continue;
+        if (solGrid[y][x] == None): continue;
         # remember its cell value in case we need to put it back  
-        backup = grid[y][x];
-        grid[y][x] = None;
+        backup = pzlGrid[y][x];
+        pzlGrid[y][x] = None;
         # take a full copy of the grid
         copyGrid = [];
         for i in range(9):
             copyGrid.append([]);
             for j in range(9):
-                copyGrid[i].append(grid[i][j]);
+                copyGrid[i].append(pzlGrid[i][j]);
         #gridToSystem(grid);
         # solutions
         #sols = solveGridCount(copyGrid);
         #if sols == 0:
         if not solveGrid(copyGrid):
-            grid[y][x] = backup;
+            pzlGrid[y][x] = backup;
             i -= 1;
         else:
             removedCells[9*y + x] = backup;
             #print("removed ", n + 1, "; removed cells: ", removedCells); -> debug
-        #gridToSystem(grid);
-    return (grid, removedCells);
-######
+    return (pzlGrid, removedCells);
+#######
 
-## EXPORT
-def generateFullSample(missing):
+
+#######  EXPORT  #######
+def generateFullSample(missing : int) -> tuple[list[list[int]], list[list[int]], list[int]]:
     # create grid
     solGrid = generateRandomGrid();
     # create puzzle
     (inputGrid, removed) = generatePuzzle(solGrid, missing);
     return inputGrid, solGrid, removed;
+#######

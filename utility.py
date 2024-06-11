@@ -1,6 +1,11 @@
 import numpy as np
-from tensorflow import constant
 
+def gridToArray(source : list[list[int]]) -> list[int]:
+    result = [];
+    for y in range(9):
+        for x in range(9):
+            result.append(source[y][x]);
+    return result;
 def floatGridToIntGrid(fBoard):
     iBoard = [];
     for y in range(9):
@@ -9,6 +14,13 @@ def floatGridToIntGrid(fBoard):
             iBoard[y].append(int(fBoard[y][x]));
     return iBoard;
 
+def arrToGrid(source : list[int]) -> list[list[int]]:
+    result = [];
+    for y in range(9):
+        result.append([]);
+        for x in range(9):
+            result[y].append(source[9*y + x]);
+    return result;
 
 def removeDuplicates(arr):
     result = [];
@@ -76,7 +88,7 @@ def getExclusion(source, exclude):
     return arr;
 
 
-def minusOne(source, twoDim = True):
+def minusOne(source : list[int] | list[list[int]], twoDim : bool = True) -> list[int] | list[list[int]]:
     for y in range(9):
         for x in range(9):
             if (twoDim):
@@ -88,18 +100,11 @@ def minusOne(source, twoDim = True):
                     source[9*y + x] = 0;
                 #else: source[9*y + x] -= 1;
     return source;
+    
 
 
-def gridToArray(source):
-    result = [];
-    for y in range(9):
-        for x in range(9):
-            result.append(source[y][x]);
-    return result;
-def gridToTensor(source):
-    result = np.copy(source);
-    for y in range(9):
-        for x in range(9):
-            if (result[y][x] == None):
-                result[y][x] = 0;
-    return constant(result.tolist()); #tf.constant
+def isInt(val):
+    try:
+        int(val); return True;
+    except ValueError:
+        return False;

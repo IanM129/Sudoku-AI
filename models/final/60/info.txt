@@ -1,0 +1,9 @@
+
+    clue count:                 60
+    samples used:               1000000
+    validation amount ratio:    1 // 10  (0.1%)
+            
+    detailed sample use amount:
+            testing:            900000  (0.9%)
+            validation:         100000  (0.1%)
+    
