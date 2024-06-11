@@ -1,6 +1,5 @@
 from math import floor
 import random as rand
-from time import time as time_time
 from datetime import datetime
 from debug import sprintGrid1D, sprintGrid2D
 
@@ -211,16 +210,11 @@ def solveGridCount(grid):
             maxSolsFound = solutions;
         solutions = 0;
     return maxSolsFound;
-def solveGrid(grid, start = False):
-    if start == True:
-        start_timer = time_time();
+def solveGrid(grid):
     # get first empty
     empty = getFirstEmpty(grid);
     # check if grid filled
     if (not empty):
-        if (start):
-            print("not empty??");
-            print(grid);
         return True;
     # iterate through possible values to put in empty
     x = empty[0];
@@ -231,8 +225,6 @@ def solveGrid(grid, start = False):
         for val in vals:
             grid[y][x] = val;
             if (solveGrid(grid)):
-                if (start == True):
-                    print("done; duration: " + str(time_time() - start_timer));
                 return True;
             grid[y][x] = None;
     return False;
