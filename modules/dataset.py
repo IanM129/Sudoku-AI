@@ -1,13 +1,12 @@
 import os
-from sudoku import generateFullSample #generateRandomGrid, generatePuzzle, sprintGrid, sprintGrid2D
-from utility import gridToArray, isInt
-from debug import printSudokuSample, sprintGrid2D_Line, printSudokuSample
-#from bot_train import generateTrainSample
+from modules.sudoku import generateFullSample
+from modules.utility import gridToArray, isInt
+from modules.debug import printSudokuSample, sprintGrid2D_Line, printSudokuSample
 
-import winsound #temp
+import winsound # debug
 
-datasetPath = "../dataset/"; #""../dataset/";
-evaluatePath = "../dataset/evaluate/";
+datasetPath = "../../dataset/"; #""../dataset/";
+evaluatePath = "./dataset_eval/";
 
 nxtID = 0;
 # Sudoku sample class
@@ -107,7 +106,7 @@ def loadWholeDataset(path):
     for line in f:
         dataset.append(parseSample(line.rstrip()));
     f.close();
-    print("Dataset loaded.");
+    print("INFO: Dataset loaded.");
     return dataset;
 def loadDataset_internal(path : str, amount : int = -1) -> tuple[list[SudokuSample] | None, int]:
     dataset = [];
@@ -223,11 +222,6 @@ def saveWriteDataset(dataset : list[SudokuSample], clueCount : int, path : str =
     if (os.path.isfile(path) and not force and not append):
         print("WARNING: Dataset with " + str(clueCount) + " already exists");
         winsound.Beep(2000, 400);
-        #if (append):
-        #    answer = input("Proceed with appending to file? y/n ");
-        #    if answer.lower() not in ["y","yes"]:
-        #        print("INFO: Cancelling write."); return;
-        #else:
         answer = input("Proceed with overwriting? y/n ");
         if answer.lower() not in ["y","yes"]:
             print("INFO: Cancelling overwriting."); return;
@@ -287,6 +281,13 @@ def readDatasetSize(clueCount : int) -> int:
     except ValueError:
         print("ERROR: Non-int size written in file '" + str(path) + "'"); os._exit(1);
 ###
+
+
+
+
+
+
+
 
 ######  Console  ######
 usage = {"help":    "WIP: HELP",
@@ -465,49 +466,9 @@ def mainconsole(commands = None):
                 break;
     return;
 
-
-
-
-
-
-# run #
-if __name__ == "__main__":
-    mainconsole();
-    os._exit(0);
-
-    ### define commands:
-    # 2
-    #commands = [];
-    #for cc in ["70", "60", "50", "40", "30"]:
-    #    commands.append("gen {0} 10000 -id:0 -v:0".format(cc));
-    #    commands.append("s -c -f");
-    #print("Auto-console commands given:");
-    #for i in range(len(commands)):
-    #    print("{:3} ".format(i) + commands[i]);
-    #mainconsole(commands=commands);
-    #os._exit(0);
-    
-    # 1
-    commands = [];
-    for clueCount in [30]:
-        readSize = 0;
-        path = datasetPath + str(clueCount) + ".csv";
-        if (os.path.isfile(path)):
-            r = open(path, "r");
-            _, readSize = r.readline().rstrip().split(',');
-            readSize = int(readSize);
-            r.close();
-        amount = 1000000 - readSize;
-        print("- amount: " + str(amount));
-        cnt = 100;
-        batch = int(amount / cnt);
-        for i in range(cnt):
-            commands.append("gen {0} {1} -id:read -v:0".format(clueCount, batch));
-            commands.append("s -a -c -f");
-    # print commands
-    #print("Auto-console commands given:");
-    #for i in range(len(commands)):
-    #    print("{:3} ".format(i) + commands[i]);
-    # run
-    mainconsole(commands=commands);
-    os._exit(0);
+# console #
+#if __name__ == "__main__":
+#    global evaluatePath;
+#    evaluatePath = "../dataset_eval/";
+#    mainconsole();
+#    os._exit(0);

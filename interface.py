@@ -1,4 +1,6 @@
+# Standard library
 import os
+import sys
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1';
 from tkinter import font as tkFont
 import tkinter as tk
@@ -6,11 +8,13 @@ from tkinter import simpledialog
 from random import randint
 from time import time as time_time
 from functools import partial
-from bot import prepareSample, prepareSampleArr, createModel, loadModel, solveTest
-from dataset import loadEvalSet
-from sudoku import generateFullSample, solveGrid, isSudokuValid
-from sudoku_window import openSample, colorCells
-from utility import floatGridToIntGrid, findInvalidCells, gridToIndeces, getExclusion, arrToGrid
+
+# Custom
+from modules.bot import prepareSample, prepareSampleArr, createModel, loadModel, solveTest
+from modules.dataset import loadEvalSet
+from modules.sudoku import generateFullSample, solveGrid, isSudokuValid
+from modules.sudoku_window import openSample, colorCells
+from modules.utility import floatGridToIntGrid, findInvalidCells, gridToIndeces, getExclusion, arrToGrid
 
 # => ((button, button, label), (inputGrid, solGrid, invalid list) = 'test', name)
 testLogs = [];
@@ -178,7 +182,6 @@ def runTest(clueCount, load : list[int] = [0], model = None):
         load[0] = r;
         inputGrid = arrToGrid(sample.puzzle);
         inputTensor, solTensor = prepareSampleArr(sample.puzzle, sample.solution);
-        print("r = " + str(r));
     else:
         # generate test
         (inputGrid, solGrid, removedCells) = generateFullSample(81 - clueCount);
@@ -222,7 +225,6 @@ def getCurrentParams():
     numOfClues = int(diffChosen.get());
     global loadFromDSVar;
     load = loadFromDSVar.get() and genLoadCb["state"] != "disabled";
-    print("count: " + str(testCnt) + "; cc: " + str(numOfClues) + "; load? " + str(load));
     return (testCnt, numOfClues, load);
 
 ## Special
@@ -242,7 +244,6 @@ def runTestBlankModel():
     return;
 def solveWithAlgorithm(testInd : int):
     global testLogs;
-    print("testInd = " + str(testInd) + "; len = " + str(len(testLogs)));
     testLog = testLogs[testInd];
     valid = False;
     for i in range(10):
@@ -272,12 +273,10 @@ def solveWithAlgorithm(testInd : int):
 
 ### INTERFACE
 def toggle(target):
-    print("toggle: " + str(target["state"]));
     if target['state'] == "active":
         target['state'] = "normal";
     else:        
         target['state'] = "active";
-    print(str(target["state"]));
     return
 def modelSel(value):
     if (value == "blank"):
@@ -290,10 +289,9 @@ def inputCntVal(input):
         return False;
     return int(input) > -1 and int(input) < 1001;
 def clueCountSelected(value, diffSelFrm):
-    print(value);
     global genLoadCb;
     genLoadCb.destroy();
-    if (os.path.isfile("../dataset/evaluate/" + str(value) + ".csv")):
+    if (os.path.isfile("./dataset_eval/" + str(value) + ".csv")):
         global loadFromDSVar;
         genLoadCb = tk.Checkbutton(diffSelFrm, text="Load", indicatoron=True, variable=loadFromDSVar);
         genLoadCb.pack(anchor="s", side=tk.RIGHT);

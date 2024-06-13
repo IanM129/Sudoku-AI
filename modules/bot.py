@@ -3,11 +3,11 @@ from tensorflow import keras
 from keras import layers
 import numpy as np
 from time import time as time_time
-from dataset import loadDataset
-from sudoku import isSudokuValid, generateFullSample
-from utility import gridToArray, minusOne
-from tf_utility import gridToTensor, arrToTensor
-from debug import sprintGrid2D, sprintTestSample, sprintEvalResult 
+from modules.dataset import loadDataset
+from modules.sudoku import isSudokuValid, generateFullSample
+from modules.utility import gridToArray, minusOne
+from modules.tf_utility import gridToTensor, arrToTensor
+from modules.debug import sprintGrid2D, sprintTestSample, sprintEvalResult 
 
 model = None;
 
