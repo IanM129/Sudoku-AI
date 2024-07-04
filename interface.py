@@ -253,7 +253,7 @@ def solveWithAlgorithm(testInd : int):
             for x in range(9):
                 if (testLog[1][0][y][x] != 0): grid[y][x] = testLog[1][0][y][x];
         start = time_time();
-        solved = solveGrid(grid, True);
+        solved = solveGrid(grid);
         end = time_time();
         valid = isSudokuValid(grid);
         if (valid == True): break;
